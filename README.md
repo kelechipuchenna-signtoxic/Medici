@@ -84,7 +84,7 @@ You can use any email provider. Two examples:
 
 - [ ] Settings → Business: enter your real address, phone, **WhatsApp number** (`234…`), email, Instagram and bank details.
 - [ ] Settings → Staff: replace the placeholder names (Lorenzo, Cosimo, Giuliano, Bianca) with your team.
-- [ ] Settings → Services/Products: check prices (they are loaded from the deck), durations and stock.
+- [ ] Settings → Services/Products: services follow the Medici Cutz price list (30 services in 6 categories). Check the estimated durations, and set product stock.
 - [ ] Settings → POS users: create a cashier login for the shop manager.
 - [ ] Change the admin password.
 - [ ] Back up `data/medici.db` regularly. It holds everything.

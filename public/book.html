@@ -68,7 +68,11 @@ label.f span i{text-transform:none;letter-spacing:0;font-style:normal;color:var(
 input,textarea{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--text);padding:14px 16px;font:16px var(--sans);border-radius:0}
 input:focus,textarea:focus{border-color:var(--gold);outline:none}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:600px){.two{grid-template-columns:1fr}.step-b{padding:18px 16px}.step-h{padding:16px}}
+@media(max-width:600px){.two{grid-template-columns:1fr}.step-b{padding:18px 16px}.step-h{padding:16px}
+  #services .grid{grid-template-columns:1fr 1fr;gap:8px}
+  #services .opt{padding:12px;display:flex;flex-direction:column;justify-content:space-between;min-height:88px}
+  #services .opt .t{font-size:17px}
+  #services .opt .m{flex-wrap:wrap;gap:2px 8px;font-size:12.5px}}
 .check{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--gold-lo);padding:16px;cursor:pointer;margin:6px 0 20px;font-size:14.5px}
 .check input{width:20px;height:20px;flex:none;accent-color:var(--gold);margin-top:2px}
 .err{color:var(--danger);font-size:14px;margin:0 0 14px;min-height:1px}
@@ -182,6 +186,7 @@ input:focus,textarea:focus{border-color:var(--gold);outline:none}
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = (n) => '₦' + Number(n).toLocaleString('en-NG');
+const priceLabel = (x) => (x.price_max > x.price ? money(x.price) + ' – ' + money(x.price_max) : money(x.price));
 const fmt12 = (t) => { let [h, m] = t.split(':').map(Number); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + String(m).padStart(2, '0') + ' ' + ap; };
 const $$dates = () => document.querySelectorAll('#dates .date');
 const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -202,13 +207,13 @@ function summary() {
   $('#sumB').textContent = s ? (b ? b.name : 'First available') : '—';
   $('#sumW').textContent = st.date && st.time ? `${niceDate(st.date)} · ${fmt12(st.time)}` : '—';
   $('#sumD').textContent = s ? s.duration + ' minutes' : '—';
-  $('#sumP').textContent = s ? money(s.price) : '—';
-  $('#v1').textContent = s ? money(s.price) : '';
+  $('#sumP').textContent = s ? priceLabel(s) : '—';
+  $('#v1').textContent = s ? priceLabel(s) : '';
   $('#v2').textContent = s ? (b ? b.name : 'First available') : '';
   $('#v3').textContent = st.time ? fmt12(st.time) : '';
   $('#mbar').classList.toggle('show', !!s);
   $('#mS').textContent = s ? s.name : '';
-  $('#mW').textContent = st.time ? `${niceDate(st.date)} · ${fmt12(st.time)}` : s ? money(s.price) + ' · ' + s.duration + ' min' : '';
+  $('#mW').textContent = st.time ? `${niceDate(st.date)} · ${fmt12(st.time)}` : s ? priceLabel(s) + ' · ' + s.duration + ' min' : '';
   $('#mGo').textContent = st.time ? 'Your details' : 'Pick a time';
 }
 $('#mGo').onclick = () => (st.time ? $('#s4') : $('#s3')).scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -218,7 +223,7 @@ function renderServices() {
   st.info.services.forEach((s) => (cats[s.category] = cats[s.category] || []).push(s));
   $('#services').innerHTML = Object.entries(cats).map(([c, list]) => `<div class="cat">${esc(c)}</div><div class="grid">${list.map((s) => `
     <button type="button" class="opt" data-id="${s.id}" aria-pressed="false"><div class="t">${esc(s.name)}</div>
-    <div class="d">${esc(s.description || '')}</div><div class="m"><span>${s.duration} min</span><b>${money(s.price)}</b></div></button>`).join('')}</div>`).join('');
+    ${s.description ? `<div class="d">${esc(s.description)}</div>` : ''}<div class="m"><span>${s.duration} min</span><b>${priceLabel(s)}</b></div></button>`).join('')}</div>`).join('');
   $('#services').querySelectorAll('.opt').forEach((b) => b.onclick = () => {
     st.service = st.info.services.find((s) => s.id == b.dataset.id); st.time = null;
     $('#services').querySelectorAll('.opt').forEach((x) => { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', x === b); });
@@ -330,7 +335,7 @@ function showBooking(b) {
       <div><span>Service</span><span>${esc(b.service)}</span></div>
       <div><span>Barber</span><span>${esc(b.staff || 'First available')}</span></div>
       <div><span>Duration</span><span>${b.duration} min</span></div>
-      <div><span>Price</span><span>${money(b.price)}</span></div>
+      <div><span>Price</span><span>${priceLabel(b)}</span></div>
       <div><span>Where</span><span style="text-align:right">${esc(info.address)}</span></div>
     </div>
     <div class="acts">

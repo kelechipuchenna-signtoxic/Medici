@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS staff (
   bookable INTEGER DEFAULT 1, active INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS services (
   id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT, price INTEGER NOT NULL,
-  duration INTEGER NOT NULL DEFAULT 45, category TEXT DEFAULT 'Barbing', bookable INTEGER DEFAULT 1,
+  duration INTEGER NOT NULL DEFAULT 45, category TEXT DEFAULT 'Hair Cuts', bookable INTEGER DEFAULT 1,
   active INTEGER DEFAULT 1, sort INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL, cost INTEGER DEFAULT 0,
@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS expenses (
 CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(date);
 CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);
 `);
+
+if (!db.prepare('PRAGMA table_info(services)').all().some((c) => c.name === 'price_max')) db.exec('ALTER TABLE services ADD COLUMN price_max INTEGER');
 
 // ---------- helpers ----------
 const one = (sql, ...p) => db.prepare(sql).get(...p);
@@ -122,30 +124,76 @@ function genReferralCode(name) {
   }
 }
 
+// ---------- service catalogue (Medici Cutz price list) ----------
+// Each row: [category, name, price, durationMinutes, priceMax?]. priceMax marks a price range.
+const BARBER_CATEGORIES = ['Hair Cuts', 'Cuts + Style / Colour', 'Wash & Treatment', 'Shaving', 'Dreadlocks'];
+const NAIL_CATEGORY = 'Nails & Hand/Foot Care';
+const CATALOG_VERSION = 'pricelist-2026-11';
+const CATALOG = [
+  ['Hair Cuts', 'Adult Cut', 5000, 45],
+  ['Hair Cuts', 'European Hair Cut', 7000, 60],
+  ['Hair Cuts', 'Ladies Hair Cut', 5000, 45],
+  ['Hair Cuts', 'Kid Hair Cut', 3000, 30],
+  ['Hair Cuts', 'European Kid Cut', 5000, 45],
+  ['Hair Cuts', 'Haircut with Blade', 5000, 45],
+  ['Hair Cuts', 'Haircut with Dye Carving', 5000, 60],
+  ['Hair Cuts', 'Losing of Hair', 1000, 30, 2000],
+  ['Cuts + Style / Colour', 'Hair Cut & Dye', 6000, 60],
+  ['Cuts + Style / Colour', 'Hair Cut & Texturing', 6000, 60],
+  ['Cuts + Style / Colour', 'Kid Hair Cut & Dye', 5000, 45],
+  ['Cuts + Style / Colour', 'Kid Hair Cut & Texturing', 5000, 45],
+  ['Cuts + Style / Colour', 'Texture Only', 3000, 30],
+  ['Cuts + Style / Colour', 'Hair Colour', 8000, 60],
+  ['Cuts + Style / Colour', 'Hair Dye', 3000, 30],
+  ['Wash & Treatment', 'Washing of Hair', 1000, 15],
+  ['Wash & Treatment', 'Washing of Woman Long Hair', 3000, 30],
+  ['Wash & Treatment', 'Washing of Dreadlocks', 4000, 30],
+  ['Wash & Treatment', 'Barbing & Scrub', 5000, 60],
+  ['Wash & Treatment', 'Complete Facial Treatment', 10000, 45],
+  ['Wash & Treatment', 'Beard Treatment', 2000, 20],
+  ['Shaving', 'Shaving', 2000, 20],
+  ['Shaving', 'European Shaving', 4000, 30],
+  ['Dreadlocks', 'Dread Lock', 30000, 180],
+  ['Dreadlocks', 'Dread Re-lock (New)', 20000, 120],
+  [NAIL_CATEGORY, 'Manicure', 5000, 45],
+  [NAIL_CATEGORY, 'Pedicure', 8000, 60],
+  [NAIL_CATEGORY, 'Manicure & Pedicure', 12000, 90],
+  [NAIL_CATEGORY, 'Nails – Hands Only', 3000, 30],
+  [NAIL_CATEGORY, 'Nails – Both Hands & Feet', 5000, 60],
+];
+
+// One-time switch to the price list. Old services are deleted, or hidden if a booking still points at them.
+// Sales keep their own copy of item names and prices, so past receipts and reports are unaffected.
+if ((one("SELECT value FROM settings WHERE key = 'catalog_version'") || {}).value !== CATALOG_VERSION) {
+  tx(() => {
+    for (const s of all('SELECT id FROM services')) {
+      if (one('SELECT 1 FROM bookings WHERE service_id = ? LIMIT 1', s.id)) run('UPDATE services SET active = 0, bookable = 0 WHERE id = ?', s.id);
+      else run('DELETE FROM services WHERE id = ?', s.id);
+    }
+    const ins = db.prepare('INSERT INTO services (name, description, price, price_max, duration, category, sort) VALUES (?,?,?,?,?,?,?)');
+    CATALOG.forEach(([cat, name, price, duration, max], i) => ins.run(name, '', price, max || null, duration, cat, i));
+    // Point existing staff at the new categories.
+    const map = { Barbing: BARBER_CATEGORIES, 'Nail Care': [NAIL_CATEGORY], Packages: [] };
+    for (const st of all("SELECT id, skills FROM staff WHERE skills IS NOT NULL AND skills != ''")) {
+      const next = [...new Set(st.skills.split(',').map((x) => x.trim()).flatMap((x) => map[x] || [x]))];
+      run('UPDATE staff SET skills = ? WHERE id = ?', next.join(','), st.id);
+    }
+    run("INSERT INTO settings (key, value) VALUES ('catalog_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", CATALOG_VERSION);
+  });
+}
+
 // ---------- seed ----------
 if (!one('SELECT 1 FROM users LIMIT 1')) {
   const pw = process.env.ADMIN_PASSWORD || 'medici2026';
   run('INSERT INTO users (username, name, role, pw_hash) VALUES (?,?,?,?)', 'admin', 'Administrator', 'admin', hashPassword(pw));
 }
-if (!one('SELECT 1 FROM services LIMIT 1')) {
-  const svc = [
-    ['Standard Haircut', 'Professional standard cut with basic styling', 5000, 45, 'Barbing'],
-    ['Premium Haircut & Styling', 'Advanced styling and finish with hot towel treatment', 7000, 60, 'Barbing'],
-    ['Luxury Haircut Treatment', 'The full ritual: beverage, facial and head massage', 10000, 90, 'Barbing'],
-    ['Beard Trim & Shaping', 'Precision beard grooming and line-up', 3000, 30, 'Barbing'],
-    ['Full Grooming Package', 'Luxury cut, beard sculpt, facial, manicure & pedicure', 20000, 150, 'Packages'],
-    ['Kids Cut', 'A sharp, patient cut for young gentlemen', 3000, 30, 'Barbing'],
-    ['Pedicure', 'Restorative foot care and finish', 8000, 60, 'Nail Care'],
-    ['Manicure', 'Clean, groomed, gentleman\'s hands', 5000, 45, 'Nail Care'],
-  ];
-  svc.forEach((s, i) => run('INSERT INTO services (name, description, price, duration, category, sort) VALUES (?,?,?,?,?,?)', ...s, i));
-}
 if (!one('SELECT 1 FROM staff LIMIT 1')) {
   const st = db.prepare('INSERT INTO staff (name, title, commission_pct, skills) VALUES (?,?,?,?)');
-  st.run('Lorenzo', 'Lead Barber', 30, 'Barbing,Packages');
-  st.run('Cosimo', 'Senior Barber', 25, 'Barbing,Packages');
-  st.run('Giuliano', 'Senior Barber', 25, 'Barbing,Packages');
-  st.run('Bianca', 'Pedicurist', 25, 'Nail Care,Packages');
+  const barber = BARBER_CATEGORIES.join(',');
+  st.run('Lorenzo', 'Lead Barber', 30, barber);
+  st.run('Cosimo', 'Senior Barber', 25, barber);
+  st.run('Giuliano', 'Senior Barber', 25, barber);
+  st.run('Bianca', 'Pedicurist', 25, NAIL_CATEGORY);
 }
 if (!one('SELECT 1 FROM products LIMIT 1')) {
   run("INSERT INTO products (name, price, cost, stock) VALUES ('Beard Oil (30ml)', 6500, 3500, 12)");

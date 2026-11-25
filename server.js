@@ -140,11 +140,11 @@ function createBooking(body, { byStaff = false } = {}) {
 }
 
 function bookingView(ref) {
-  const b = one(`SELECT b.*, s.name service_name, s.price, st.name staff_name, st.title staff_title
+  const b = one(`SELECT b.*, s.name service_name, s.price, s.price_max, st.name staff_name, st.title staff_title
                  FROM bookings b LEFT JOIN services s ON s.id = b.service_id LEFT JOIN staff st ON st.id = b.staff_id WHERE b.ref = ?`, ref);
   if (!b) return null;
   const grace = int(getSettings().grace_minutes, 10);
-  return { ref: b.ref, name: b.name, phone: b.phone, email: b.email, service: b.service_name, price: b.price, staff: b.staff_name,
+  return { ref: b.ref, name: b.name, phone: b.phone, email: b.email, service: b.service_name, price: b.price, price_max: b.price_max, staff: b.staff_name,
     staff_title: b.staff_title, date: b.date, time: b.time, duration: b.duration, status: b.status, notes: b.notes,
     latest_arrival: toTime(toMin(b.time) + grace), grace };
 }
@@ -155,7 +155,7 @@ app.get('/api/public/info', wrap((req, res) => {
   res.json({
     business: { name: S.business_name, tagline: S.tagline, address: S.address, phone: S.phone, whatsapp: S.whatsapp, email: S.email, instagram: S.instagram },
     hours: JSON.parse(S.hours), grace: int(S.grace_minutes), days_ahead: int(S.booking_days_ahead), today: todayStr(),
-    services: all('SELECT id, name, description, price, duration, category FROM services WHERE active = 1 AND bookable = 1 ORDER BY sort, id'),
+    services: all('SELECT id, name, description, price, price_max, duration, category FROM services WHERE active = 1 AND bookable = 1 ORDER BY sort, id'),
     staff: all('SELECT id, name, title, skills FROM staff WHERE active = 1 AND bookable = 1 ORDER BY id'),
     loyalty: { per_visit: int(S.points_per_visit), milestone: int(S.visit_milestone), milestone_bonus: int(S.visit_milestone_bonus), referral: int(S.referral_bonus), point_value: int(S.point_value) },
   });
@@ -386,7 +386,9 @@ function computeSale(body, user) {
     if (it.type === 'service') {
       const s = one('SELECT * FROM services WHERE id = ?', int(it.id));
       if (!s) throw new HttpError(400, 'Unknown service.');
-      lines.push({ type: 'service', id: s.id, name: s.name, price: s.price, qty, amount: s.price * qty, staff_id: staff?.id || null, staff_name: staff?.name || null });
+      // Range-priced services (e.g. ₦1,000 – ₦2,000) take the price chosen at the till, kept within the range.
+      const price = s.price_max > s.price ? Math.min(s.price_max, Math.max(s.price, int(it.price, s.price))) : s.price;
+      lines.push({ type: 'service', id: s.id, name: s.name, price, qty, amount: price * qty, staff_id: staff?.id || null, staff_name: staff?.name || null });
     } else if (it.type === 'product') {
       const p = one('SELECT * FROM products WHERE id = ?', int(it.id));
       if (!p) throw new HttpError(400, 'Unknown product.');
@@ -679,7 +681,7 @@ function crud(table, fields) {
     res.json(one(`SELECT * FROM ${table} WHERE id = ?`, int(req.params.id)));
   }));
 }
-crud('services', ['name', 'description', 'price', 'duration', 'category', 'bookable', 'active', 'sort']);
+crud('services', ['name', 'description', 'price', 'price_max', 'duration', 'category', 'bookable', 'active', 'sort']);
 crud('products', ['name', 'price', 'cost', 'stock', 'active']);
 crud('staff', ['name', 'title', 'commission_pct', 'skills', 'bookable', 'active']);
 pos.post('/users', adminOnly, wrap((req, res) => {

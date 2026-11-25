@@ -109,8 +109,9 @@ table.t{width:100%;border-collapse:collapse}
 .seg button.on{background:var(--gold-grad);color:#16110a;font-weight:500}
 
 /* register */
-.register{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:start}
-@media(max-width:1180px){.register{grid-template-columns:1fr}}
+.register{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start}
+.register>*{min-width:0}
+@media(max-width:1180px){.register{grid-template-columns:minmax(0,1fr)}}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .tile{background:var(--panel);border:1px solid var(--line);padding:14px;text-align:left;cursor:pointer;border-radius:4px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;transition:.15s}
 .tile:hover{border-color:var(--gold-lo);background:var(--panel-2)}

@@ -138,9 +138,13 @@ const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting &
 document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 
 fetch('/api/public/info').then((r) => r.json()).then((d) => {
-  $('#menuList').innerHTML = d.services.map((s) => `
-    <div class="menu-item"><div class="row"><h3>${esc(s.name)}</h3><span class="dots"></span><span class="price">${money(s.price)}</span></div>
-    <p>${esc(s.description || '')}</p><div class="dur">${s.duration} min · ${esc(s.category)}</div></div>`).join('');
+  const price = (s) => (s.price_max > s.price ? `${money(s.price)} – ${money(s.price_max)}` : money(s.price));
+  const groups = {};
+  d.services.forEach((s) => (groups[s.category] = groups[s.category] || []).push(s));
+  $('#menuList').innerHTML = Object.entries(groups).map(([cat, list], i) => `
+    <div class="menu-group"><div class="menu-cat"><span>${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][i] || i + 1}</span>${esc(cat)}</div>
+    ${list.map((s) => `<div class="menu-item"><div class="row"><h3>${esc(s.name)}</h3><span class="dots"></span><span class="price">${price(s)}</span></div>
+      ${s.description ? `<p>${esc(s.description)}</p>` : ''}</div>`).join('')}</div>`).join('');
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = new Date(d.today + 'T00:00:00Z').getUTCDay();
   $('#hours').innerHTML = [1, 2, 3, 4, 5, 6, 0].map((i) => `<tr class="${i === today ? 'today' : ''}"><td>${days[i]}</td><td>${d.hours[i] ? fmt12(d.hours[i][0]) + ' – ' + fmt12(d.hours[i][1]) : 'Closed'}</td></tr>`).join('');

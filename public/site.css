@@ -63,15 +63,17 @@ section{padding:120px 0}
 @media(max-width:860px){.ethos{grid-template-columns:1fr;gap:48px}}
 
 /* services */
-.menu{display:grid;grid-template-columns:repeat(2,1fr);gap:0 72px}
-.menu-item{padding:26px 0;border-bottom:1px solid var(--line)}
+.menu{columns:2;column-gap:72px}
+.menu-group{break-inside:avoid;margin-bottom:56px}
+.menu-cat{display:flex;align-items:baseline;gap:14px;font:500 12px/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--gold);padding-bottom:14px;border-bottom:1px solid var(--gold-lo)}
+.menu-cat span{font:500 22px/1 var(--serif);letter-spacing:.05em;color:var(--gold-lo)}
+.menu-item{padding:16px 0;border-bottom:1px solid var(--line)}
 .menu-item .row{display:flex;align-items:baseline;gap:14px}
-.menu-item h3{font:500 26px/1.2 var(--serif);margin:0}
-.menu-item .dots{flex:1;border-bottom:1px dotted var(--line-2);transform:translateY(-6px)}
-.menu-item .price{font:500 24px var(--serif);color:var(--gold)}
+.menu-item h3{font:500 22px/1.25 var(--serif);margin:0}
+.menu-item .dots{flex:1;border-bottom:1px dotted var(--line-2);transform:translateY(-6px);min-width:16px}
+.menu-item .price{font:500 21px var(--serif);color:var(--gold);white-space:nowrap}
 .menu-item p{color:var(--muted);margin:6px 0 0;font-size:15px}
-.menu-item .dur{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-lo)}
-@media(max-width:860px){.menu{grid-template-columns:1fr}}
+@media(max-width:860px){.menu{columns:1}}
 
 /* experience */
 .exp{background:var(--ink-2);border-block:1px solid var(--line)}

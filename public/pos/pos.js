@@ -15,6 +15,7 @@ const fmt12 = (t) => { if (!t) return ''; let [h, m] = t.split(':').map(Number);
 const stampTime = (s) => fmt12(String(s).slice(11, 16));
 const METHODS = { cash: 'Cash', transfer: 'Transfer', card: 'Card', split: 'Split' };
 const STATUS = { booked: 'Booked', checked_in: 'Checked in', completed: 'Completed', cancelled: 'Cancelled', forfeited: 'Late / no-show', paid: 'Paid', void: 'Void' };
+const priceLabel = (x) => (x.price_max > x.price ? `${money(x.price)} – ${money(x.price_max)}` : money(x.price));
 const fmtPhone = (p) => (p ? (p.startsWith('234') ? '0' + p.slice(3) : p) : '');
 
 const I = {
@@ -307,9 +308,10 @@ VIEWS.register = async () => {
       return;
     }
     const list = t === 'Products' ? S.products.filter((p) => p.active) : cats[t];
-    $('#catalogue').innerHTML = list.length ? `<div class="tiles">${list.map((x) => `<button class="tile" data-id="${x.id}"><b>${esc(x.name)}</b><div class="row" style="justify-content:space-between"><span>${money(x.price)}</span><small>${t === 'Products' ? `${x.stock} in stock` : x.duration + ' min'}</small></div></button>`).join('')}</div>` : '<div class="empty">Nothing here yet — add items in Settings.</div>';
+    $('#catalogue').innerHTML = list.length ? `<div class="tiles">${list.map((x) => `<button class="tile" data-id="${x.id}"><b>${esc(x.name)}</b><div class="row" style="justify-content:space-between"><span>${priceLabel(x)}</span><small>${t === 'Products' ? `${x.stock} in stock` : x.duration + ' min'}</small></div></button>`).join('')}</div>` : '<div class="empty">Nothing here yet — add items in Settings.</div>';
     $$('#catalogue .tile').forEach((b) => (b.onclick = () => {
       const x = list.find((i) => i.id == b.dataset.id);
+      if (t !== 'Products' && x.price_max > x.price) return pickPrice(x);
       addItem(t === 'Products' ? { type: 'product', id: x.id, name: x.name, price: x.price } : { type: 'service', id: x.id, name: x.name, price: x.price, category: x.category });
     }));
   };
@@ -317,8 +319,23 @@ VIEWS.register = async () => {
   $('#clearCart').onclick = () => { cart = newCart(); renderTicket(); };
   showCat(tabs[0]); renderTicket();
 };
+function pickPrice(x) {
+  modal({ title: x.name, body: `${field(`Price (${priceLabel(x)})`, `<input id="pp" inputmode="numeric" value="${x.price}">`)}
+    <div class="row">${[x.price, Math.round((x.price + x.price_max) / 2 / 500) * 500, x.price_max].filter((v, i, a) => a.indexOf(v) === i).map((v) => `<button class="btn sm" data-v="${v}">${money(v)}</button>`).join('')}</div>`,
+    foot: '<button class="btn ghost" data-close>Cancel</button><button class="btn gold" id="ok">Add to ticket</button>',
+    mount: (el, close) => {
+      const add = (v) => {
+        const price = Math.round(num(v));
+        if (price < x.price || price > x.price_max) return toast(`Price must be between ${money(x.price)} and ${money(x.price_max)}.`, true);
+        close(); addItem({ type: 'service', id: x.id, name: x.name, price, category: x.category });
+      };
+      $$('[data-v]', el).forEach((b) => (b.onclick = () => add(b.dataset.v)));
+      $('#ok', el).onclick = () => add($('#pp', el).value);
+      $('#pp', el).onkeydown = (e) => e.key === 'Enter' && add(e.target.value);
+    } });
+}
 function addItem(it) {
-  const same = cart.items.find((l) => l.type === it.type && l.id === it.id && it.type !== 'custom');
+  const same = cart.items.find((l) => l.type === it.type && l.id === it.id && l.price === it.price && it.type !== 'custom');
   if (same) same.qty++;
   else cart.items.push({ key: Math.random(), qty: 1, staff_id: it.type === 'service' ? (cart.items.find((l) => l.staff_id)?.staff_id || '') : '', ...it });
   renderTicket();
@@ -673,12 +690,12 @@ VIEWS.settings = async (tab) => {
     $$('[data-id]', sp).forEach((tr) => (tr.onclick = () => edit(rows.find((r) => r.id == tr.dataset.id))));
   };
   const yes = (k) => (r) => (r[k] ? 'Yes' : '—');
-  if (tab === 'services') listEditor('services', [['name', 'Service'], ['category', 'Category'], ['duration', 'Minutes', 'r'], ['price', 'Price', 'r', (r) => money(r.price)], ['bookable', 'Online', '', yes('bookable')]],
-    [['name', 'Name'], ['description', 'Description'], ['category', 'Category', 'text', 'Staff skills match on this (e.g. Barbing, Nail Care, Packages)'], ['price', 'Price (₦)', 'number'], ['duration', 'Duration (minutes)', 'number'], ['sort', 'Display order', 'number'], ['bookable', 'Bookable online', 'bool'], ['active', 'Active', 'bool']], 'Services');
+  if (tab === 'services') listEditor('services', [['name', 'Service'], ['category', 'Category'], ['duration', 'Minutes', 'r'], ['price', 'Price', 'r', priceLabel], ['bookable', 'Online', '', yes('bookable')]],
+    [['name', 'Name'], ['description', 'Description'], ['category', 'Category', 'text', 'Staff skills match on this (e.g. Hair Cuts, Shaving, Nails &amp; Hand/Foot Care)'], ['price', 'Price (₦)', 'number', 'For a price range, this is the lowest price.'], ['price_max', 'Maximum price (₦)', 'number', 'Only for price ranges, e.g. ₦1,000 – ₦2,000. Leave 0 for a fixed price.'], ['duration', 'Duration (minutes)', 'number'], ['sort', 'Display order', 'number'], ['bookable', 'Bookable online', 'bool'], ['active', 'Active', 'bool']], 'Services');
   if (tab === 'products') listEditor('products', [['name', 'Product'], ['price', 'Price', 'r', (r) => money(r.price)], ['cost', 'Cost', 'r', (r) => money(r.cost)], ['stock', 'Stock', 'r']],
     [['name', 'Name'], ['price', 'Selling price (₦)', 'number'], ['cost', 'Unit cost (₦)', 'number'], ['stock', 'In stock', 'number', 'Purchases linked to this product add stock automatically.'], ['active', 'Active', 'bool']], 'Products');
   if (tab === 'staff') listEditor('staff', [['name', 'Name'], ['title', 'Role'], ['commission_pct', 'Commission', 'r', (r) => r.commission_pct + '%'], ['skills', 'Service categories'], ['bookable', 'Online', '', yes('bookable')]],
-    [['name', 'Name'], ['title', 'Role / title'], ['commission_pct', 'Commission (%)', 'number'], ['skills', 'Service categories', 'text', 'Comma-separated, e.g. Barbing, Packages. Leave blank for all.'], ['bookable', 'Clients can book online', 'bool'], ['active', 'Active', 'bool']], 'Staff');
+    [['name', 'Name'], ['title', 'Role / title'], ['commission_pct', 'Commission (%)', 'number'], ['skills', 'Service categories', 'text', 'Comma-separated service categories, e.g. Hair Cuts, Shaving, Dreadlocks. Leave blank for all.'], ['bookable', 'Clients can book online', 'bool'], ['active', 'Active', 'bool']], 'Staff');
   if (tab === 'users') {
     sp.innerHTML = `<div class="card scroll-x"><div class="card-h"><h3>POS users</h3><button class="btn gold sm" id="addU">${I.plus} Add user</button></div><table class="t"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
       ${S.users.map((u) => `<tr><td>${esc(u.name)}</td><td>${esc(u.username)}</td><td>${u.role === 'admin' ? 'Administrator' : 'Cashier'}</td><td>${u.active ? 'Active' : '<span class="muted">Disabled</span>'}</td>
