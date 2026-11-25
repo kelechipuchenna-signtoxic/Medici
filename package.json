@@ -1,0 +1,20 @@
+{
+  "name": "medici-cutz",
+  "version": "1.0.0",
+  "description": "Medici Cutz website, online booking and point of sale",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.22.3",
+    "nodemailer": "^6.10.1"
+  },
+  "engines": {
+    "node": ">=22.5"
+  }
+}

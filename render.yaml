@@ -1,0 +1,22 @@
+# One-click deploy on Render: New → Blueprint → select this repository.
+services:
+  - type: web
+    name: medici-cutz
+    runtime: node
+    plan: starter            # persistent disks need a paid plan
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/public/info
+    envVars:
+      - key: NODE_VERSION
+        value: "22.12.0"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_PASSWORD
+        generateValue: true  # shown in Render → Environment; change it after first login
+      - key: BASE_URL
+        sync: false          # set to your public URL, e.g. https://medici-cutz.onrender.com
+    disk:
+      name: medici-data
+      mountPath: /var/data
+      sizeGB: 1

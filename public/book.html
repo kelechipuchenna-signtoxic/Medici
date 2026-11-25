@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Book Your Chair · Medici Cutz</title>
+<meta name="description" content="Reserve your chair at Medici Cutz, Abuja's premium barber shop. Choose your service, barber and time in under a minute.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Book your chair · Medici Cutz">
+<meta property="og:description" content="Premium barbering in Abuja. Pick your service, barber and time — your chair will be ready.">
+<meta property="og:image" content="{{BASE}}/img/logo-email.jpg">
+<meta property="og:url" content="{{BASE}}/book">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b0a08">
+<link rel="icon" href="/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+body{background:#0b0a08 radial-gradient(1000px 520px at 50% -120px,#2a2112 0%,#0b0a08 70%) no-repeat fixed}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+.top a.home{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.intro{text-align:center;padding:24px 0 34px}
+.intro img{width:96px;height:96px;border-radius:50%;margin:0 auto 18px;box-shadow:0 0 60px rgba(212,175,106,.22)}
+.intro h1{font-size:clamp(42px,8vw,68px)}
+.intro p{color:var(--muted);margin:12px auto 0;max-width:480px}
+.policy{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--gold-lo);background:rgba(212,175,106,.06);padding:16px 18px;margin:0 auto 34px;max-width:720px;font-size:14.5px}
+.policy svg{flex:none;margin-top:2px}
+.policy b{color:var(--gold);font-weight:500}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:32px;align-items:start;padding-bottom:120px}
+.layout>*{min-width:0}
+@media(max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}.summary{display:none}}
+.step{border:1px solid var(--line);background:rgba(22,19,14,.7);margin-bottom:18px}
+.step-h{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid var(--line)}
+.step-h .num{width:30px;height:30px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;font:500 15px var(--serif);color:var(--gold);flex:none}
+.step-h h2{font:500 25px/1 var(--serif);margin:0;flex:1}
+.step-h .val{font-size:13px;color:var(--gold);text-align:right}
+.step.locked{opacity:.45;pointer-events:none}
+.step.locked .step-b{display:none}
+.step-b{padding:22px 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:10px}
+.opt{text-align:left;background:var(--ink);border:1px solid var(--line);color:var(--text);padding:16px 18px;cursor:pointer;font:inherit;transition:.18s;position:relative}
+.opt:hover{border-color:var(--gold-lo)}
+.opt.sel{border-color:var(--gold);background:linear-gradient(160deg,rgba(212,175,106,.14),rgba(212,175,106,.03))}
+.opt .t{font:500 20px/1.2 var(--serif)}
+.opt .m{display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--muted)}
+.opt .m b{color:var(--gold);font-weight:400}
+.opt .d{font-size:13px;color:var(--muted);margin-top:4px}
+.cat{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-lo);margin:18px 0 10px}
+.cat:first-child{margin-top:0}
+.dates{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin;scroll-snap-type:x mandatory}
+.date{flex:none;width:72px;text-align:center;padding:12px 0;background:var(--ink);border:1px solid var(--line);color:var(--text);cursor:pointer;font:inherit;scroll-snap-align:start}
+.date small{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.date strong{display:block;font:500 28px/1.1 var(--serif)}
+.date.sel{border-color:var(--gold);background:rgba(212,175,106,.12)}
+.date.sel small{color:var(--gold)}
+.date:disabled{opacity:.3;cursor:not-allowed}
+.times{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:18px}
+.time{padding:12px 0;background:var(--ink);border:1px solid var(--line);color:var(--text);cursor:pointer;font:15px var(--sans)}
+.time:hover:not(:disabled){border-color:var(--gold-lo)}
+.time.sel{border-color:var(--gold);background:var(--gold-grad);color:#15110a;font-weight:500}
+.time:disabled{opacity:.25;text-decoration:line-through;cursor:not-allowed}
+.period{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-lo);margin:20px 0 -8px}
+.empty{color:var(--muted);padding:18px 0;font-size:15px}
+label.f{display:block;margin-bottom:16px}
+label.f span{display:block;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+label.f span i{text-transform:none;letter-spacing:0;font-style:normal;color:var(--gold-lo)}
+input,textarea{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--text);padding:14px 16px;font:16px var(--sans);border-radius:0}
+input:focus,textarea:focus{border-color:var(--gold);outline:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.two{grid-template-columns:1fr}.step-b{padding:18px 16px}.step-h{padding:16px}}
+.check{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--gold-lo);padding:16px;cursor:pointer;margin:6px 0 20px;font-size:14.5px}
+.check input{width:20px;height:20px;flex:none;accent-color:var(--gold);margin-top:2px}
+.err{color:var(--danger);font-size:14px;margin:0 0 14px;min-height:1px}
+.summary{position:sticky;top:24px;border:1px solid var(--line);background:var(--card);padding:28px}
+.summary h3{font:500 26px var(--serif);margin:0 0 16px}
+.summary dl{margin:0}
+.summary dt{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+.summary dd{margin:4px 0 0;font:500 19px var(--serif)}
+.summary .tot{border-top:1px solid var(--line);margin-top:20px;padding-top:16px;display:flex;justify-content:space-between;font:500 24px var(--serif)}
+.summary .tot span:last-child{color:var(--gold)}
+.mbar{display:none;position:fixed;left:0;right:0;bottom:0;background:rgba(15,13,10,.97);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:10;justify-content:space-between;align-items:center;gap:12px}
+.mbar .s{font-size:13px;color:var(--muted);line-height:1.4;min-width:0}
+.mbar .s b{display:block;color:var(--text);font:500 18px var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:920px){.mbar.show{display:flex}}
+/* confirmation */
+.ticket{max-width:560px;margin:10px auto 80px;border:1px solid var(--gold-lo);background:var(--card);position:relative;text-align:center}
+.ticket:before{content:"";position:absolute;inset:7px;border:1px solid rgba(212,175,106,.18);pointer-events:none}
+.ticket .tp{padding:40px 32px 28px}
+.ticket .check-ico{width:64px;height:64px;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;margin:0 auto 18px}
+.ticket h2{font-size:44px}
+.ticket .ref{font:500 13px var(--sans);letter-spacing:.34em;color:var(--gold);margin-top:10px}
+.ticket .when{font:500 30px/1.2 var(--serif);margin:24px 0 4px}
+.ticket .tear{border-top:1px dashed var(--line-2);position:relative}
+.ticket .tear:before,.ticket .tear:after{content:"";position:absolute;top:-12px;width:24px;height:24px;border-radius:50%;background:var(--ink);border:1px solid var(--gold-lo)}
+.ticket .tear:before{left:-13px;clip-path:inset(0 0 0 50%)}.ticket .tear:after{right:-13px;clip-path:inset(0 50% 0 0)}
+.ticket .rows{padding:22px 32px;text-align:left}
+.ticket .rows div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px;gap:16px}
+.ticket .rows div span:first-child{color:var(--muted)}
+.arrive{margin:6px 32px 24px;padding:16px;background:rgba(212,175,106,.08);border:1px solid var(--gold-lo);font-size:15px}
+.arrive strong{display:block;font:500 28px var(--serif);color:var(--gold)}
+.ticket .acts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:0 32px 36px}
+.ticket .acts .btn{padding:14px 18px}
+.status-pill{display:inline-block;padding:6px 12px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;border:1px solid currentColor;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <a class="brand" href="/"><img src="/img/emblem-sm.png" alt=""><span class="gold-text">Medici Cutz</span></a>
+    <a class="home" href="/">Our house →</a>
+  </div>
+
+  <div id="bookView">
+    <div class="intro">
+      <div class="eyebrow">Reservations</div>
+      <h1 class="display" style="margin-top:16px">Book your <span class="gold-text">chair.</span></h1>
+      <p>Choose your service, your barber and your moment. It takes less than a minute.</p>
+    </div>
+
+    <div class="policy" role="note">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4af6a" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div><b>Arrival policy:</b> please arrive <b>no later than <span class="g">10</span> minutes</b> after your booked time. After that, your chair is released to the next guest and you may need to rebook.</div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <div class="step" id="s1">
+          <div class="step-h"><div class="num">1</div><h2>Service</h2><div class="val" id="v1"></div></div>
+          <div class="step-b" id="services"><div class="empty">Loading the menu…</div></div>
+        </div>
+        <div class="step locked" id="s2">
+          <div class="step-h"><div class="num">2</div><h2>Barber</h2><div class="val" id="v2"></div></div>
+          <div class="step-b"><div class="grid" id="staff"></div></div>
+        </div>
+        <div class="step locked" id="s3">
+          <div class="step-h"><div class="num">3</div><h2>Date & time</h2><div class="val" id="v3"></div></div>
+          <div class="step-b"><div class="dates" id="dates"></div><div id="times"></div></div>
+        </div>
+        <div class="step locked" id="s4">
+          <div class="step-h"><div class="num">4</div><h2>Your details</h2></div>
+          <div class="step-b">
+            <form id="form" novalidate>
+              <div class="two">
+                <label class="f"><span>Full name</span><input name="name" autocomplete="name" required></label>
+                <label class="f"><span>WhatsApp number</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0803 000 0000" required></label>
+              </div>
+              <div class="two">
+                <label class="f"><span>Email <i>(optional, for receipts)</i></span><input name="email" type="email" autocomplete="email"></label>
+                <label class="f"><span>Referral code <i>(optional)</i></span><input name="referral" placeholder="e.g. TOBI482" autocapitalize="characters"></label>
+              </div>
+              <label class="f"><span>Notes for your barber <i>(optional)</i></span><textarea name="notes" rows="2" placeholder="Style reference, allergies, anything we should know"></textarea></label>
+              <label class="check"><input type="checkbox" name="accept_policy" required>
+                <span>I will arrive <b style="color:var(--gold);font-weight:500">no later than <span class="g">10</span> minutes</b> after my booked time. I understand that after this, my booking is released.</span></label>
+              <p class="err" id="err" role="alert"></p>
+              <button class="btn solid" style="width:100%" id="submit">Confirm booking</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <aside class="summary">
+        <div class="eyebrow">Your booking</div>
+        <h3 style="margin-top:12px">Summary</h3>
+        <dl>
+          <dt>Service</dt><dd id="sumS">—</dd>
+          <dt>Barber</dt><dd id="sumB">—</dd>
+          <dt>When</dt><dd id="sumW">—</dd>
+          <dt>Duration</dt><dd id="sumD">—</dd>
+        </dl>
+        <div class="tot"><span>Price</span><span id="sumP">—</span></div>
+        <p style="color:var(--muted);font-size:13px;margin:16px 0 0">Pay at the saloon after your service. Cash, transfer or card.</p>
+      </aside>
+    </div>
+  </div>
+
+  <div id="doneView" hidden></div>
+</div>
+
+<div class="mbar" id="mbar"><div class="s"><b id="mS"></b><span id="mW"></span></div><button class="btn solid" id="mGo" style="padding:13px 16px;flex:none">Continue</button></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = (n) => '₦' + Number(n).toLocaleString('en-NG');
+const fmt12 = (t) => { let [h, m] = t.split(':').map(Number); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + String(m).padStart(2, '0') + ' ' + ap; };
+const $$dates = () => document.querySelectorAll('#dates .date');
+const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const dObj = (d) => new Date(d + 'T00:00:00Z');
+const niceDate = (d) => { const x = dObj(d); return `${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][x.getUTCDay()]}, ${x.getUTCDate()} ${MON[x.getUTCMonth()]}`; };
+const addDays = (d, n) => new Date(dObj(d).getTime() + n * 864e5).toISOString().slice(0, 10);
+const api = async (url, opts) => { const r = await fetch(url, opts); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Something went wrong.'); return j; };
+
+const st = { info: null, service: null, staff: '', date: null, time: null };
+
+function setStep(n) {
+  [1, 2, 3, 4].forEach((i) => $('#s' + i).classList.toggle('locked', i > n));
+}
+function summary() {
+  const s = st.service, b = st.staff ? st.info.staff.find((x) => x.id == st.staff) : null;
+  $('#sumS').textContent = s ? s.name : '—';
+  $('#sumB').textContent = s ? (b ? b.name : 'First available') : '—';
+  $('#sumW').textContent = st.date && st.time ? `${niceDate(st.date)} · ${fmt12(st.time)}` : '—';
+  $('#sumD').textContent = s ? s.duration + ' minutes' : '—';
+  $('#sumP').textContent = s ? money(s.price) : '—';
+  $('#v1').textContent = s ? money(s.price) : '';
+  $('#v2').textContent = s ? (b ? b.name : 'First available') : '';
+  $('#v3').textContent = st.time ? fmt12(st.time) : '';
+  $('#mbar').classList.toggle('show', !!s);
+  $('#mS').textContent = s ? s.name : '';
+  $('#mW').textContent = st.time ? `${niceDate(st.date)} · ${fmt12(st.time)}` : s ? money(s.price) + ' · ' + s.duration + ' min' : '';
+  $('#mGo').textContent = st.time ? 'Your details' : 'Pick a time';
+}
+$('#mGo').onclick = () => (st.time ? $('#s4') : $('#s3')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+function renderServices() {
+  const cats = {};
+  st.info.services.forEach((s) => (cats[s.category] = cats[s.category] || []).push(s));
+  $('#services').innerHTML = Object.entries(cats).map(([c, list]) => `<div class="cat">${esc(c)}</div><div class="grid">${list.map((s) => `
+    <button type="button" class="opt" data-id="${s.id}" aria-pressed="false"><div class="t">${esc(s.name)}</div>
+    <div class="d">${esc(s.description || '')}</div><div class="m"><span>${s.duration} min</span><b>${money(s.price)}</b></div></button>`).join('')}</div>`).join('');
+  $('#services').querySelectorAll('.opt').forEach((b) => b.onclick = () => {
+    st.service = st.info.services.find((s) => s.id == b.dataset.id); st.time = null;
+    $('#services').querySelectorAll('.opt').forEach((x) => { x.classList.toggle('sel', x === b); x.setAttribute('aria-pressed', x === b); });
+    const ok = st.info.staff.filter((p) => !p.skills || p.skills.split(',').map((x) => x.trim()).includes(st.service.category));
+    if (st.staff && !ok.some((p) => p.id == st.staff)) st.staff = '';
+    renderStaff(ok); setStep(3); renderDates(); summary();
+    setTimeout(() => $('#s2').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  });
+}
+function renderStaff(list) {
+  $('#staff').innerHTML = `<button type="button" class="opt ${!st.staff ? 'sel' : ''}" data-id=""><div class="t">First available</div><div class="d">Fastest route to the chair</div></button>` +
+    list.map((p) => `<button type="button" class="opt ${st.staff == p.id ? 'sel' : ''}" data-id="${p.id}"><div class="t">${esc(p.name)}</div><div class="d">${esc(p.title || '')}</div></button>`).join('');
+  $('#staff').querySelectorAll('.opt').forEach((b) => b.onclick = () => {
+    st.staff = b.dataset.id; st.time = null;
+    $('#staff').querySelectorAll('.opt').forEach((x) => x.classList.toggle('sel', x === b));
+    loadTimes(); summary();
+    setTimeout(() => $('#s3').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  });
+}
+function renderDates() {
+  const out = [];
+  for (let i = 0; i <= st.info.days_ahead; i++) {
+    const d = addDays(st.info.today, i), x = dObj(d), open = !!st.info.hours[x.getUTCDay()];
+    out.push(`<button type="button" class="date ${d === st.date ? 'sel' : ''}" data-d="${d}" ${open ? '' : 'disabled'}><small>${i === 0 ? 'Today' : i === 1 ? 'Tmrw' : DAY[x.getUTCDay()]}</small><strong>${x.getUTCDate()}</strong><small>${MON[x.getUTCMonth()]}</small></button>`);
+  }
+  $('#dates').innerHTML = out.join('');
+  $('#dates').querySelectorAll('.date').forEach((b) => b.onclick = () => {
+    st.date = b.dataset.d; st.time = null;
+    $('#dates').querySelectorAll('.date').forEach((x) => x.classList.toggle('sel', x === b));
+    loadTimes(); summary();
+  });
+  const auto = !st.date;
+  if (!st.date) { const first = $('#dates .date:not(:disabled)'); if (first) { st.date = first.dataset.d; first.classList.add('sel'); } }
+  loadTimes(auto);
+}
+let seq = 0;
+async function loadTimes(auto) {
+  if (!st.service || !st.date) return;
+  const my = ++seq;
+  $('#times').innerHTML = '<div class="empty">Checking the book…</div>';
+  const r = await api(`/api/public/availability?date=${st.date}&service=${st.service.id}&staff=${st.staff}`).catch(() => ({ slots: [] }));
+  if (my !== seq) return;
+  const avail = r.slots.filter((s) => s.available);
+  if (!avail.length) {
+    // On first load, quietly move to the next day that has a free chair
+    const nextBtn = auto && $(`#dates .date[data-d="${st.date}"]`)?.nextElementSibling;
+    const next = nextBtn && (nextBtn.disabled ? nextBtn.nextElementSibling : nextBtn);
+    if (next && !next.disabled && auto < 7) {
+      st.date = next.dataset.d; $$dates().forEach((x) => x.classList.toggle('sel', x === next));
+      return loadTimes((auto === true ? 1 : auto) + 1);
+    }
+    const why = r.open === false ? 'We are closed on this day.' : st.date === st.info.today && !r.slots.length ? 'No more times available today.' : 'Fully booked on this day.';
+    $('#times').innerHTML = `<div class="empty">${why} Please choose another date${st.staff ? ' or “First available”' : ''}.</div>`;
+    return;
+  }
+  const groups = [['Morning', (t) => t < '12:00'], ['Afternoon', (t) => t >= '12:00' && t < '17:00'], ['Evening', (t) => t >= '17:00']];
+  $('#times').innerHTML = groups.map(([label, f]) => {
+    const sl = r.slots.filter((s) => f(s.time)); if (!sl.length) return '';
+    return `<div class="period">${label}</div><div class="times">${sl.map((s) => `<button type="button" class="time ${s.time === st.time ? 'sel' : ''}" data-t="${s.time}" ${s.available ? '' : 'disabled aria-label="' + s.time + ' unavailable"'}>${fmt12(s.time).replace(' ', '')}</button>`).join('')}</div>`;
+  }).join('');
+  $('#times').querySelectorAll('.time').forEach((b) => b.onclick = () => {
+    st.time = b.dataset.t;
+    $('#times').querySelectorAll('.time').forEach((x) => x.classList.toggle('sel', x === b));
+    setStep(4); summary();
+    setTimeout(() => $('#s4').scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  });
+}
+
+$('#form').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const body = Object.fromEntries(f); body.accept_policy = !!f.get('accept_policy');
+  Object.assign(body, { service_id: st.service?.id, staff_id: st.staff || null, date: st.date, time: st.time });
+  $('#err').textContent = '';
+  if (!body.name.trim()) return ($('#err').textContent = 'Please tell us your name.');
+  if (body.phone.replace(/\D/g, '').length < 10) return ($('#err').textContent = 'Please enter a valid WhatsApp number.');
+  if (!body.accept_policy) return ($('#err').textContent = `Please confirm you'll arrive within ${st.info.grace} minutes of your booked time.`);
+  $('#submit').disabled = true; $('#submit').textContent = 'Reserving…';
+  try {
+    const b = await api('/api/public/bookings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    history.pushState({}, '', '/booking/' + b.ref);
+    showBooking(b);
+  } catch (err) {
+    $('#err').textContent = err.message;
+    if (/taken/.test(err.message)) { st.time = null; loadTimes(); summary(); }
+  } finally { $('#submit').disabled = false; $('#submit').textContent = 'Confirm booking'; }
+};
+
+const STATUS = { booked: ['Confirmed', 'var(--gold)'], checked_in: ['Checked in', 'var(--ok)'], completed: ['Completed', 'var(--ok)'], cancelled: ['Cancelled', 'var(--danger)'], forfeited: ['Released — arrived late / no-show', 'var(--danger)'] };
+function showBooking(b) {
+  $('#bookView').hidden = true; $('#mbar').classList.remove('show'); scrollTo(0, 0);
+  const info = st.info.business;
+  const wa = `https://wa.me/${info.whatsapp}?text=${encodeURIComponent(`Hello Medici Cutz, this is ${b.name}. My booking ref is ${b.ref} — ${b.service}, ${niceDate(b.date)} at ${fmt12(b.time)}.`)}`;
+  const [label, color] = STATUS[b.status] || [b.status, 'var(--muted)'];
+  const active = b.status === 'booked';
+  $('#doneView').hidden = false;
+  $('#doneView').innerHTML = `<div class="ticket">
+    <div class="tp">
+      <div class="check-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d4af6a" stroke-width="1.6"><path d="M5 12.5l4.2 4.2L19 7"/></svg></div>
+      <div class="eyebrow">${active ? 'Your chair is reserved' : 'Booking'}</div>
+      <h2 class="display" style="margin-top:12px">${active ? 'See you soon,' : 'Hello,'} <span class="gold-text">${esc(b.name.split(' ')[0])}.</span></h2>
+      <div class="ref">REF · ${esc(b.ref)}</div>
+      <div class="status-pill" style="color:${color}">${label}</div>
+      <div class="when">${niceDate(b.date)}<br>${fmt12(b.time)}</div>
+    </div>
+    ${active ? `<div class="arrive">Arrive by <strong>${fmt12(b.latest_arrival)}</strong> at the latest. After ${b.grace} minutes your chair is released to the next guest.</div>` : ''}
+    <div class="tear"></div>
+    <div class="rows">
+      <div><span>Service</span><span>${esc(b.service)}</span></div>
+      <div><span>Barber</span><span>${esc(b.staff || 'First available')}</span></div>
+      <div><span>Duration</span><span>${b.duration} min</span></div>
+      <div><span>Price</span><span>${money(b.price)}</span></div>
+      <div><span>Where</span><span style="text-align:right">${esc(info.address)}</span></div>
+    </div>
+    <div class="acts">
+      ${active ? `<a class="btn solid" href="/api/public/bookings/${b.ref}/ics">Add to calendar</a>` : `<a class="btn solid" href="/book">Book again</a>`}
+      <a class="btn" href="${wa}" target="_blank" rel="noopener">WhatsApp us</a>
+      ${active ? `<button class="btn" id="cancelBtn" style="border-color:var(--line-2);color:var(--muted)">Cancel</button>` : ''}
+    </div>
+    <p style="color:var(--muted);font-size:13px;padding:0 32px 30px;margin:0">Save this page — it's your booking pass. Show the reference at the front desk.</p>
+  </div>`;
+  const c = $('#cancelBtn');
+  if (c) c.onclick = async () => {
+    const phone = prompt('To cancel, confirm the phone number you booked with:');
+    if (!phone) return;
+    try { showBooking(await api(`/api/public/bookings/${b.ref}/cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) })); }
+    catch (e) { alert(e.message); }
+  };
+}
+
+(async function init() {
+  st.info = await api('/api/public/info');
+  document.querySelectorAll('.g').forEach((el) => (el.textContent = st.info.grace));
+  const m = location.pathname.match(/^\/booking\/([A-Z0-9]+)/i);
+  if (m) {
+    try { return showBooking(await api('/api/public/bookings/' + m[1])); }
+    catch { history.replaceState({}, '', '/book'); }
+  }
+  renderServices();
+  const pre = new URLSearchParams(location.search).get('ref');
+  if (pre) $('#form [name=referral]').value = pre;
+  summary();
+})();
+addEventListener('popstate', () => location.reload());
+</script>
+</body>
+</html>
